@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tom's Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg-primary: #ffffff;
+      --bg-secondary: #f5f5f3;
+      --bg-tertiary: #efefed;
+      --text-primary: #1a1a1a;
+      --text-secondary: #6b6b6b;
+      --text-tertiary: #9b9b9b;
+      --border: rgba(0,0,0,0.12);
+      --border-hover: rgba(0,0,0,0.25);
+      --radius-md: 8px;
+      --radius-lg: 12px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-primary: #1c1c1c;
+        --bg-secondary: #252525;
+        --bg-tertiary: #2e2e2e;
+        --text-primary: #f0f0f0;
+        --text-secondary: #a0a0a0;
+        --text-tertiary: #666666;
+        --border: rgba(255,255,255,0.1);
+        --border-hover: rgba(255,255,255,0.22);
+      }
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 1.5rem;
+    }
+
+    .greeting { font-size: 22px; font-weight: 500; }
+    .date-str { font-size: 13px; color: var(--text-secondary); }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 1.5rem;
+    }
+
+    .metric {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      padding: 0.875rem 1rem;
+    }
+
+    .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
+    .metric-value { font-size: 24px; font-weight: 500; }
+    .metric-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 600px) {
+      .grid-2 { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .card {
+      background: var(--bg-primary);
+      border: 0.5px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.25rem;
+    }
+
+    .course-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 9px 0;
+      border-bottom: 0.5px solid var(--border);
+    }
+    .course-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .course-name { font-size: 14px; font-weight: 500; }
+    .course-tag {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .filter-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-btn {
+      font-size: 11px;
+      padding: 4px 11px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border-hover);
+      background: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s;
+    }
+    .filter-btn:hover { background: var(--bg-secondary); }
+    .filter-btn.active {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      border-color: var(--text-primary);
+    }
+
+    .assign-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 0.5px solid var(--border);
+      cursor: pointer;
+    }
+    .assign-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .assign-row.done .assign-title {
+      text-decoration: line-through;
+      color: var(--text-tertiary);
+    }
+
+    .checkbox {
+      width: 16px;
+      height: 16px;
+      min-width: 16px;
+      border: 0.5px solid var(--border-hover);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+      font-size: 10px;
+    }
+    .checkbox.checked {
+      background: var(--text-primary);
+      border-color: var(--text-primary);
+      color: var(--bg-primary);
+    }
+
+    .assign-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
+    .assign-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .course-pill { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; }
+    .due-soon { color: #993C1D; font-weight: 500; }
+    .due-future { color: var(--text-tertiary); }
+    .empty { font-size: 13px; color: var(--text-tertiary); padding: 8px 0; }
+
+    .refresh-btn {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      padding: 0;
+      margin-left: 8px;
+    }
+    .refresh-btn:hover { color: var(--text-primary); }
+
+    .last-updated {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: 1.5rem;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <span class="greeting">Hey, Tom</span>
+    <span class="date-str" id="today-str"></span>
+  </div>
+
+  <div class="metric-grid">
+    <div class="metric">
+      <div class="metric-label">Due this week</div>
+      <div class="metric-value" id="m-week">0</div>
+      <div class="metric-sub">assignments</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Due today</div>
+      <div class="metric-value" id="m-today">0</div>
+      <div class="metric-sub">assignments</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Completed</div>
+      <div class="metric-value" id="m-done">0</div>
+      <div class="metric-sub">of <span id="m-total">0</span> total</div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div>
+      <div class="section-label">Your courses</div>
+      <div class="card" id="courses-card"></div>
+    </div>
+    <div>
+      <div class="section-label">Assignments
+        <button class="refresh-btn" onclick="renderAll()" title="Refresh">↻</button>
+      </div>
+      <div class="filter-row" id="filter-row"></div>
+      <div class="card" id="assign-card"></div>
+    </div>
+  </div>
+
+  <p class="last-updated" id="last-updated"></p>
+</div>
+
+<script>
+const ICAL_URL = 'https://umich.instructure.com/feeds/calendars/user_QWg4huzUeUvgRILDMViiMXV0kkeRaL0GbsueXqsd.ics';
+
+const COURSES = {
+  'PHYSICS 240': {color:'#dbeafe', text:'#1e40af'},
+  'ASIAN 325':   {color:'#ede9fe', text:'#5b21b6'},
+  'CHEM 215':    {color:'#d1fae5', text:'#065f46'},
+  'PSYCH 111':   {color:'#fef3c7', text:'#92400e'},
+};
+
+const courseFullNames = {
+  'PHYSICS 240': 'Physics 240',
+  'ASIAN 325':   'Asian 325',
+  'CHEM 215':    'Chem 215',
+  'PSYCH 111':   'Psych 111',
+};
+
+let assignments = [];
+let done = new Set(JSON.parse(localStorage.getItem('done') || '[]'));
+let activeFilter = 'all';
+const today = new Date(); today.setHours(0,0,0,0);
+
+function daysUntil(str) {
+  return Math.round((new Date(str + 'T00:00:00') - today) / 86400000);
+}
+
+function dueLabel(str) {
+  const d = daysUntil(str);
+  if(d < 0)  return {label:'Overdue', cls:'due-soon'};
+  if(d === 0) return {label:'Due today', cls:'due-soon'};
+  if(d === 1) return {label:'Due tomorrow', cls:'due-soon'};
+  if(d <= 4)  return {label:`Due in ${d} days`, cls:'due-soon'};
+  const dt = new Date(str + 'T00:00:00');
+  return {label:'Due ' + dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}), cls:'due-future'};
+}
+
+function detectCourse(summary) {
+  for(const key of Object.keys(COURSES)) {
+    if(summary.toUpperCase().includes(key)) return key;
+  }
+  return null;
+}
+
+function detectType(summary) {
+  const s = summary.toLowerCase();
+  if(s.includes('exam') || s.includes('midterm') || s.includes('final')) return 'exam';
+  if(s.includes('checkpoint')) return 'checkpoint';
+  if(s.includes('essay') || s.includes('critical term') || s.includes('writing')) return 'writing';
+  if(s.includes('asynch')) return 'asynch';
+  return 'reading';
+}
+
+function parseICS(text) {
+  const events = [];
+  const blocks = text.split('BEGIN:VEVENT').slice(1);
+  for(const block of blocks) {
+    const summaryMatch = block.match(/SUMMARY[^:]*:(.+)/);
+    const dtMatch = block.match(/DTSTART[^:]*:(\d{8})/);
+    if(!summaryMatch || !dtMatch) continue;
+    const raw = summaryMatch[1].replace(/\r/g,'').trim();
+    const title = raw.replace(/\[.*?\]/g,'').replace(/\+/g,' ').trim();
+    const course = detectCourse(raw);
+    if(!course) continue;
+    const ds = dtMatch[1];
+    const due = `${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`;
+    if(daysUntil(due) < 0) continue;
+    events.push({title, course, due, type: detectType(title)});
+  }
+  return events.sort((a,b) => new Date(a.due) - new Date(b.due));
+}
+
+async function fetchAssignments() {
+  try {
+    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(ICAL_URL)}`;
+    const res = await fetch(proxy);
+    const data = await res.json();
+    assignments = parseICS(data.contents);
+    document.getElementById('last-updated').textContent = 'Last synced: ' + new Date().toLocaleTimeString();
+  } catch(e) {
+    // fallback to hardcoded data if fetch fails
+    assignments = [
+      {title:'Unit 17 Day 2 Asynch',course:'PHYSICS 240',due:'2026-03-30',type:'asynch'},
+      {title:'Unit 18 Day 1 Asynch',course:'PHYSICS 240',due:'2026-03-31',type:'asynch'},
+      {title:'DogenTeaandRice',course:'ASIAN 325',due:'2026-03-31',type:'reading'},
+      {title:'ZenBuddhism',course:'ASIAN 325',due:'2026-03-31',type:'reading'},
+      {title:'Critical Term 8',course:'ASIAN 325',due:'2026-04-01',type:'writing'},
+      {title:'Unit 18 Day 2 Asynch',course:'PHYSICS 240',due:'2026-04-01',type:'asynch'},
+      {title:'Unit 19 Day 1 Asynch',course:'PHYSICS 240',due:'2026-04-02',type:'asynch'},
+      {title:'Checkpoint 11',course:'CHEM 215',due:'2026-04-03',type:'checkpoint'},
+      {title:'Essay Assignment #2',course:'PSYCH 111',due:'2026-04-06',type:'essay'},
+      {title:'Bodiford - Zen Funerals',course:'ASIAN 325',due:'2026-04-07',type:'reading'},
+      {title:'Checkpoint 12',course:'CHEM 215',due:'2026-04-10',type:'checkpoint'},
+      {title:'Exam 3',course:'CHEM 215',due:'2026-04-14',type:'exam'},
+      {title:'Checkpoint 13',course:'CHEM 215',due:'2026-04-17',type:'checkpoint'},
+      {title:'Final Exam',course:'CHEM 215',due:'2026-04-23',type:'exam'},
+    ];
+    document.getElementById('last-updated').textContent = 'Using cached data (could not sync)';
+  }
+  renderAll();
+}
+
+function renderCourses() {
+  document.getElementById('courses-card').innerHTML = Object.entries(courseFullNames).map(([k,v]) => {
+    const c = COURSES[k];
+    const count = assignments.filter(a => a.course === k).length;
+    return `<div class="course-row">
+      <span class="course-name">${v}</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <span style="font-size:12px;color:var(--text-tertiary)">${count} upcoming</span>
+        <span class="course-tag" style="background:${c.color};color:${c.text}">${k}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderFilters() {
+  const filters = ['all','this week','exam','writing','checkpoint','reading','asynch'];
+  document.getElementById('filter-row').innerHTML = filters.map(f =>
+    `<button class="filter-btn${activeFilter===f?' active':''}" onclick="setFilter('${f}')">${f}</button>`
+  ).join('');
+}
+
+function setFilter(f) { activeFilter = f; renderFilters(); renderAssigns(); }
+
+function renderAssigns() {
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
+  let items = assignments.filter(a => {
+    if(activeFilter === 'this week') return new Date(a.due+'T00:00:00') <= weekEnd;
+    if(activeFilter === 'all') return true;
+    return a.type === activeFilter || (activeFilter === 'writing' && a.type === 'essay');
+  });
+
+  const el = document.getElementById('assign-card');
+  if(!items.length){ el.innerHTML='<p class="empty">No assignments match this filter.</p>'; updateMetrics(); return; }
+
+  el.innerHTML = items.map((a) => {
+    const key = a.course + '|' + a.due + '|' + a.title;
+    const isDone = done.has(key);
+    const {label, cls} = dueLabel(a.due);
+    const c = COURSES[a.course] || {color:'#f1f1ee',text:'#555'};
+    return `<div class="assign-row${isDone?' done':''}" onclick="toggleDone('${key}')">
+      <div class="checkbox${isDone?' checked':''}">${isDone?'✓':''}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="assign-title">${a.title}</div>
+        <div class="assign-meta">
+          <span class="course-pill" style="background:${c.color};color:${c.text}">${a.course}</span>
+          <span class="${isDone?'due-future':cls}">${label}</span>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  updateMetrics();
+}
+
+function toggleDone(key) {
+  done.has(key) ? done.delete(key) : done.add(key);
+  localStorage.setItem('done', JSON.stringify([...done]));
+  renderAssigns();
+}
+
+function updateMetrics() {
+  const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
+  const thisWeek = assignments.filter(a => new Date(a.due+'T00:00:00') <= weekEnd).length;
+  const todayCount = assignments.filter(a => daysUntil(a.due) === 0).length;
+  document.getElementById('m-week').textContent = thisWeek;
+  document.getElementById('m-today').textContent = todayCount;
+  document.getElementById('m-done').textContent = done.size;
+  document.getElementById('m-total').textContent = assignments.length;
+}
+
+function renderAll() { renderCourses(); renderFilters(); renderAssigns(); }
+
+document.getElementById('today-str').textContent = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+fetchAssignments();
+</script>
+</body>
+</html>
