@@ -131,7 +131,7 @@
       <div class="setup-step">
         <div class="step-num">1</div>
         <div>Open <a class="setup-link" href="https://script.google.com" target="_blank">script.google.com</a>, click <strong>New project</strong>, and replace all the code with this:
-          <div class="code-block" id="script-code">function doGet(e) {
+          <div class="code-block" id="script-code">function doGet() {
   var threads = GmailApp.search('from:instructure.com', 0, 50);
   var emails = [];
   for (var i = 0; i &lt; threads.length; i++) {
@@ -151,15 +151,12 @@
   }
   emails.sort(function(a,b){ return b.date - a.date; });
   var json = JSON.stringify({emails: emails});
-  var cb = e &amp;&amp; e.parameter &amp;&amp; e.parameter.callback;
-  if (cb) {
-    return ContentService
-      .createTextOutput(cb + '(' + json + ');')
-      .setMimeType(ContentService.MimeType.JAVASCRIPT);
-  }
-  return ContentService
-    .createTextOutput(json)
-    .setMimeType(ContentService.MimeType.JSON);
+  var html = '&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;body&gt;'
+    + '&lt;script&gt;window.opener&amp;&amp;window.opener'
+    + '.postMessage(' + json + ',"*");'
+    + 'setTimeout(function(){window.close()},200);'
+    + '&lt;/script&gt;&lt;/body&gt;&lt;/html&gt;';
+  return HtmlService.createHtmlOutput(html);
 }</div>
           <div class="copy-row"><button class="copy-btn" id="copy-btn" onclick="copyScript()">copy code</button></div>
         </div>
