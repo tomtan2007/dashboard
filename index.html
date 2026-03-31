@@ -1,203 +1,141 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tom's Dashboard</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg-primary: #ffffff;
+      --bg: #ffffff;
       --bg-secondary: #f5f5f3;
-      --bg-tertiary: #efefed;
-      --text-primary: #1a1a1a;
-      --text-secondary: #6b6b6b;
-      --text-tertiary: #9b9b9b;
+      --bg-tertiary: #eeede8;
+      --text: #1a1a18;
+      --text-secondary: #6b6b68;
+      --text-tertiary: #9b9b97;
       --border: rgba(0,0,0,0.12);
-      --border-hover: rgba(0,0,0,0.25);
+      --border-mid: rgba(0,0,0,0.22);
       --radius-md: 8px;
       --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     }
-
     @media (prefers-color-scheme: dark) {
       :root {
-        --bg-primary: #1c1c1c;
-        --bg-secondary: #252525;
-        --bg-tertiary: #2e2e2e;
-        --text-primary: #f0f0f0;
-        --text-secondary: #a0a0a0;
-        --text-tertiary: #666666;
+        --bg: #1c1c1a;
+        --bg-secondary: #252523;
+        --bg-tertiary: #2e2e2b;
+        --text: #f0efea;
+        --text-secondary: #9b9b97;
+        --text-tertiary: #6b6b68;
         --border: rgba(255,255,255,0.1);
-        --border-hover: rgba(255,255,255,0.22);
+        --border-mid: rgba(255,255,255,0.2);
       }
     }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-tertiary);
-      color: var(--text-primary);
-      min-height: 100vh;
-      padding: 2rem 1rem;
-    }
+    body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 960px; margin: 0 auto; }
 
-    .container {
-      max-width: 900px;
-      margin: 0 auto;
-    }
-
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      margin-bottom: 1.5rem;
-    }
-
+    .header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 1.5rem; }
     .greeting { font-size: 22px; font-weight: 500; }
     .date-str { font-size: 13px; color: var(--text-secondary); }
 
-    .metric-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 1.5rem;
-    }
-
-    .metric {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
-      padding: 0.875rem 1rem;
-    }
-
+    .metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 1.5rem; }
+    @media (max-width: 600px) { .metric-grid { grid-template-columns: repeat(2, 1fr); } }
+    .metric { background: var(--bg-secondary); border-radius: var(--radius-md); padding: 0.875rem 1rem; }
     .metric-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 6px; }
-    .metric-value { font-size: 24px; font-weight: 500; }
+    .metric-value { font-size: 22px; font-weight: 500; }
     .metric-sub { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
 
-    .grid-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      align-items: start;
-    }
+    .section-label { font-size: 11px; font-weight: 500; color: var(--text-tertiary); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
 
-    @media (max-width: 600px) {
-      .grid-2 { grid-template-columns: 1fr; }
-      .metric-grid { grid-template-columns: repeat(3, 1fr); }
-    }
+    .grid-main { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; margin-bottom: 16px; }
+    @media (max-width: 620px) { .grid-main { grid-template-columns: 1fr; } }
 
-    .section-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      margin-bottom: 10px;
-    }
+    .card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; }
 
-    .card {
-      background: var(--bg-primary);
-      border: 0.5px solid var(--border);
-      border-radius: var(--radius-lg);
-      padding: 1rem 1.25rem;
-    }
+    .exam-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .exam-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; position: relative; }
+    .exam-card.urgent { border-color: #D85A30; }
+    .exam-course-pill { font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 20px; display: inline-block; margin-bottom: 8px; }
+    .exam-name { font-size: 13px; font-weight: 500; margin-bottom: 8px; line-height: 1.3; }
+    .exam-days { font-size: 30px; font-weight: 500; line-height: 1; }
+    .exam-days.urgent { color: #D85A30; }
+    .exam-days-label { font-size: 11px; color: var(--text-secondary); margin-top: 3px; }
+    .exam-delete { position: absolute; top: 10px; right: 12px; font-size: 16px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; line-height: 1; }
+    .exam-delete:hover { color: var(--text); }
 
-    .course-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 9px 0;
-      border-bottom: 0.5px solid var(--border);
-    }
-    .course-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .course-name { font-size: 14px; font-weight: 500; }
-    .course-tag {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 20px;
-      font-weight: 500;
-      white-space: nowrap;
-    }
-
-    .filter-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
-    .filter-btn {
-      font-size: 11px;
-      padding: 4px 11px;
-      border-radius: 20px;
-      border: 0.5px solid var(--border-hover);
+    .add-exam-btn {
       background: none;
-      color: var(--text-secondary);
+      border: 0.5px dashed var(--border-mid);
+      border-radius: var(--radius-lg);
+      padding: 1rem;
       cursor: pointer;
-      font-family: inherit;
-      transition: background 0.15s;
-    }
-    .filter-btn:hover { background: var(--bg-secondary); }
-    .filter-btn.active {
-      background: var(--text-primary);
-      color: var(--bg-primary);
-      border-color: var(--text-primary);
-    }
-
-    .assign-row {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 0;
-      border-bottom: 0.5px solid var(--border);
-      cursor: pointer;
-    }
-    .assign-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .assign-row.done .assign-title {
-      text-decoration: line-through;
-      color: var(--text-tertiary);
-    }
-
-    .checkbox {
-      width: 16px;
-      height: 16px;
-      min-width: 16px;
-      border: 0.5px solid var(--border-hover);
-      border-radius: 4px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: 2px;
-      font-size: 10px;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      font-family: var(--font);
+      min-height: 110px;
+      width: 100%;
     }
-    .checkbox.checked {
-      background: var(--text-primary);
-      border-color: var(--text-primary);
-      color: var(--bg-primary);
-    }
+    .add-exam-btn:hover { background: var(--bg-secondary); color: var(--text-secondary); }
 
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: var(--bg); border-radius: var(--radius-lg); padding: 1.5rem; width: 340px; max-width: 90vw; border: 0.5px solid var(--border-mid); }
+    .modal-title { font-size: 15px; font-weight: 500; margin-bottom: 1rem; }
+    .form-row { margin-bottom: 12px; }
+    .form-label { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; display: block; }
+    .form-input { width: 100%; font-size: 13px; font-family: var(--font); border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 7px 10px; background: var(--bg); color: var(--text); }
+    .form-input:focus { outline: none; border-color: var(--text-secondary); }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1rem; }
+    .btn { font-size: 13px; font-family: var(--font); padding: 7px 16px; border-radius: var(--radius-md); cursor: pointer; border: 0.5px solid var(--border-mid); background: none; color: var(--text); }
+    .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .course-row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+    .course-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .course-name { font-size: 14px; font-weight: 500; }
+    .course-tag { font-size: 11px; padding: 2px 8px; border-radius: 20px; font-weight: 500; white-space: nowrap; }
+
+    .filter-row { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+    .filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--border-mid); background: none; color: var(--text-secondary); cursor: pointer; font-family: var(--font); }
+    .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+
+    .assign-row { display: flex; align-items: flex-start; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); cursor: pointer; }
+    .assign-row:last-child { border-bottom: none; padding-bottom: 0; }
+    .assign-row.done .assign-title { text-decoration: line-through; color: var(--text-tertiary); }
+    .checkbox { width: 16px; height: 16px; min-width: 16px; border: 0.5px solid var(--border-mid); border-radius: 4px; display: flex; align-items: center; justify-content: center; margin-top: 2px; font-size: 10px; }
+    .checkbox.checked { background: var(--text); border-color: var(--text); color: var(--bg); }
     .assign-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
-    .assign-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .assign-meta { font-size: 11px; color: var(--text-secondary); margin-top: 3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
     .course-pill { font-size: 10px; font-weight: 500; padding: 1px 6px; border-radius: 20px; }
     .due-soon { color: #993C1D; font-weight: 500; }
     .due-future { color: var(--text-tertiary); }
     .empty { font-size: 13px; color: var(--text-tertiary); padding: 8px 0; }
 
-    .refresh-btn {
-      font-size: 12px;
-      color: var(--text-tertiary);
-      background: none;
-      border: none;
-      cursor: pointer;
-      font-family: inherit;
-      padding: 0;
-      margin-left: 8px;
-    }
-    .refresh-btn:hover { color: var(--text-primary); }
+    .study-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 0.5px solid var(--border); }
+    .study-row:last-child { border-bottom: none; }
+    .study-info { flex: 1; min-width: 0; }
+    .study-name { font-size: 13px; font-weight: 500; }
+    .study-sub { font-size: 11px; margin-top: 2px; display: flex; align-items: center; gap: 5px; }
+    .study-controls { display: flex; align-items: center; gap: 6px; }
+    .hour-btn { width: 24px; height: 24px; border-radius: 50%; border: 0.5px solid var(--border-mid); background: none; color: var(--text); cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; font-family: var(--font); line-height: 1; }
+    .hour-btn:hover { background: var(--bg-secondary); }
+    .hour-val { font-size: 13px; font-weight: 500; min-width: 30px; text-align: center; }
+    .study-footer { display: flex; justify-content: space-between; align-items: center; padding-top: 12px; margin-top: 4px; border-top: 0.5px solid var(--border); }
+    .study-footer-label { font-size: 12px; color: var(--text-secondary); }
+    .study-footer-val { font-size: 15px; font-weight: 500; }
 
-    .last-updated {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-top: 1.5rem;
-      text-align: center;
-    }
+    .refresh-btn { font-size: 12px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; font-family: var(--font); padding: 0; margin-left: 6px; }
+    .refresh-btn:hover { color: var(--text); }
+    .last-updated { font-size: 11px; color: var(--text-tertiary); margin-top: 1.5rem; text-align: center; }
   </style>
 </head>
 <body>
 <div class="container">
+
   <div class="header">
     <span class="greeting">Hey, Tom</span>
     <span class="date-str" id="today-str"></span>
@@ -206,178 +144,264 @@
   <div class="metric-grid">
     <div class="metric">
       <div class="metric-label">Due this week</div>
-      <div class="metric-value" id="m-week">0</div>
+      <div class="metric-value" id="m-week">—</div>
       <div class="metric-sub">assignments</div>
     </div>
     <div class="metric">
       <div class="metric-label">Due today</div>
-      <div class="metric-value" id="m-today">0</div>
+      <div class="metric-value" id="m-today">—</div>
       <div class="metric-sub">assignments</div>
     </div>
     <div class="metric">
       <div class="metric-label">Completed</div>
-      <div class="metric-value" id="m-done">0</div>
-      <div class="metric-sub">of <span id="m-total">0</span> total</div>
+      <div class="metric-value" id="m-done">—</div>
+      <div class="metric-sub">of <span id="m-total">—</span> total</div>
+    </div>
+    <div class="metric">
+      <div class="metric-label">Study hrs planned</div>
+      <div class="metric-value" id="m-study">0</div>
+      <div class="metric-sub">this week</div>
     </div>
   </div>
 
-  <div class="grid-2">
+  <div class="section-label">Exam countdowns</div>
+  <div class="exam-grid" id="exam-grid"></div>
+
+  <div class="grid-main">
     <div>
       <div class="section-label">Your courses</div>
       <div class="card" id="courses-card"></div>
     </div>
     <div>
-      <div class="section-label">Assignments
-        <button class="refresh-btn" onclick="renderAll()" title="Refresh">↻</button>
+      <div class="section-label">
+        Assignments
+        <button class="refresh-btn" onclick="fetchAssignments()">↻ sync</button>
       </div>
       <div class="filter-row" id="filter-row"></div>
       <div class="card" id="assign-card"></div>
     </div>
   </div>
 
+  <div class="section-label">Study time estimator — this week</div>
+  <div class="card">
+    <div id="study-list"></div>
+    <div class="study-footer">
+      <span class="study-footer-label">Total this week</span>
+      <span class="study-footer-val"><span id="study-total">0</span> hrs</span>
+    </div>
+  </div>
+
   <p class="last-updated" id="last-updated"></p>
 </div>
 
+<!-- Modal -->
+<div class="modal-overlay" id="modal-overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-title">Add exam</div>
+    <div class="form-row">
+      <label class="form-label">Exam name</label>
+      <input class="form-input" id="f-name" type="text" placeholder="e.g. Midterm 2" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Course</label>
+      <select class="form-input" id="f-course">
+        <option value="PHYSICS 240">Physics 240</option>
+        <option value="ASIAN 325">Asian 325</option>
+        <option value="CHEM 215">Chem 215</option>
+        <option value="PSYCH 111">Psych 111</option>
+        <option value="OTHER">Other</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Date</label>
+      <input class="form-input" id="f-date" type="date" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveExam()">Add exam</button>
+    </div>
+  </div>
+</div>
+
 <script>
-const ICAL_URL = 'https://umich.instructure.com/feeds/calendars/user_QWg4huzUeUvgRILDMViiMXV0kkeRaL0GbsueXqsd.ics';
-
+const ICAL = 'https://umich.instructure.com/feeds/calendars/user_QWg4huzUeUvgRILDMViiMXV0kkeRaL0GbsueXqsd.ics';
 const COURSES = {
-  'PHYSICS 240': {color:'#dbeafe', text:'#1e40af'},
-  'ASIAN 325':   {color:'#ede9fe', text:'#5b21b6'},
-  'CHEM 215':    {color:'#d1fae5', text:'#065f46'},
-  'PSYCH 111':   {color:'#fef3c7', text:'#92400e'},
+  'PHYSICS 240': {color:'#dbeafe',text:'#1e40af'},
+  'ASIAN 325':   {color:'#ede9fe',text:'#5b21b6'},
+  'CHEM 215':    {color:'#d1fae5',text:'#065f46'},
+  'PSYCH 111':   {color:'#fef3c7',text:'#92400e'},
+  'OTHER':       {color:'#f1f0eb',text:'#5a5a55'},
 };
+const COURSE_NAMES = {'PHYSICS 240':'Physics 240','ASIAN 325':'Asian 325','CHEM 215':'Chem 215','PSYCH 111':'Psych 111'};
 
-const courseFullNames = {
-  'PHYSICS 240': 'Physics 240',
-  'ASIAN 325':   'Asian 325',
-  'CHEM 215':    'Chem 215',
-  'PSYCH 111':   'Psych 111',
-};
-
-let assignments = [];
-let done = new Set(JSON.parse(localStorage.getItem('done') || '[]'));
-let activeFilter = 'all';
 const today = new Date(); today.setHours(0,0,0,0);
+let assignments = [];
+let done     = new Set(JSON.parse(localStorage.getItem('tdone')  || '[]'));
+let manualExams  = JSON.parse(localStorage.getItem('texams') || '[]');
+let studyHrs = JSON.parse(localStorage.getItem('tstudy') || '{}');
+let activeFilter = 'all';
 
-function daysUntil(str) {
-  return Math.round((new Date(str + 'T00:00:00') - today) / 86400000);
-}
+const daysUntil = str => Math.round((new Date(str+'T00:00:00') - today) / 86400000);
 
 function dueLabel(str) {
   const d = daysUntil(str);
   if(d < 0)  return {label:'Overdue', cls:'due-soon'};
   if(d === 0) return {label:'Due today', cls:'due-soon'};
   if(d === 1) return {label:'Due tomorrow', cls:'due-soon'};
-  if(d <= 4)  return {label:`Due in ${d} days`, cls:'due-soon'};
-  const dt = new Date(str + 'T00:00:00');
-  return {label:'Due ' + dt.toLocaleDateString('en-US',{month:'short',day:'numeric'}), cls:'due-future'};
+  if(d <= 4)  return {label:`In ${d} days`, cls:'due-soon'};
+  return {label: new Date(str+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'}), cls:'due-future'};
 }
 
-function detectCourse(summary) {
-  for(const key of Object.keys(COURSES)) {
-    if(summary.toUpperCase().includes(key)) return key;
-  }
-  return null;
-}
+function detectCourse(s) { for(const k of Object.keys(COURSES)) if(s.toUpperCase().includes(k)) return k; return null; }
 
-function detectType(summary) {
-  const s = summary.toLowerCase();
-  if(s.includes('exam') || s.includes('midterm') || s.includes('final')) return 'exam';
-  if(s.includes('checkpoint')) return 'checkpoint';
-  if(s.includes('essay') || s.includes('critical term') || s.includes('writing')) return 'writing';
-  if(s.includes('asynch')) return 'asynch';
+function detectType(t) {
+  const s = t.toLowerCase();
+  if(/exam|midterm|final/.test(s)) return 'exam';
+  if(/checkpoint/.test(s)) return 'checkpoint';
+  if(/essay|critical term|writing|paragraph/.test(s)) return 'writing';
+  if(/asynch|async/.test(s)) return 'asynch';
   return 'reading';
 }
 
 function parseICS(text) {
-  const events = [];
-  const blocks = text.split('BEGIN:VEVENT').slice(1);
-  for(const block of blocks) {
-    const summaryMatch = block.match(/SUMMARY[^:]*:(.+)/);
-    const dtMatch = block.match(/DTSTART[^:]*:(\d{8})/);
-    if(!summaryMatch || !dtMatch) continue;
-    const raw = summaryMatch[1].replace(/\r/g,'').trim();
+  const out = [];
+  for(const block of text.split('BEGIN:VEVENT').slice(1)) {
+    const sm = block.match(/SUMMARY[^:]*:(.+)/);
+    const dm = block.match(/DTSTART[^:]*:(\d{8})/);
+    if(!sm || !dm) continue;
+    const raw = sm[1].replace(/\r/g,'').trim();
     const title = raw.replace(/\[.*?\]/g,'').replace(/\+/g,' ').trim();
     const course = detectCourse(raw);
     if(!course) continue;
-    const ds = dtMatch[1];
+    const ds = dm[1];
     const due = `${ds.slice(0,4)}-${ds.slice(4,6)}-${ds.slice(6,8)}`;
     if(daysUntil(due) < 0) continue;
-    events.push({title, course, due, type: detectType(title)});
+    const type = detectType(title);
+    if(type === 'asynch' && course === 'PHYSICS 240') continue;
+    out.push({title, course, due, type});
   }
-  return events.sort((a,b) => new Date(a.due) - new Date(b.due));
+  return out.sort((a,b) => new Date(a.due)-new Date(b.due));
 }
 
 async function fetchAssignments() {
+  document.getElementById('last-updated').textContent = 'Syncing with Canvas...';
   try {
-    const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(ICAL_URL)}`;
-    const res = await fetch(proxy);
-    const data = await res.json();
-    assignments = parseICS(data.contents);
-    document.getElementById('last-updated').textContent = 'Last synced: ' + new Date().toLocaleTimeString();
-  } catch(e) {
-    // fallback to hardcoded data if fetch fails
+    const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(ICAL)}`);
+    const d = await r.json();
+    assignments = parseICS(d.contents);
+    document.getElementById('last-updated').textContent = 'Synced from Canvas · ' + new Date().toLocaleTimeString();
+  } catch {
     assignments = [
-      {title:'Unit 17 Day 2 Asynch',course:'PHYSICS 240',due:'2026-03-30',type:'asynch'},
-      {title:'Unit 18 Day 1 Asynch',course:'PHYSICS 240',due:'2026-03-31',type:'asynch'},
       {title:'DogenTeaandRice',course:'ASIAN 325',due:'2026-03-31',type:'reading'},
       {title:'ZenBuddhism',course:'ASIAN 325',due:'2026-03-31',type:'reading'},
       {title:'Critical Term 8',course:'ASIAN 325',due:'2026-04-01',type:'writing'},
-      {title:'Unit 18 Day 2 Asynch',course:'PHYSICS 240',due:'2026-04-01',type:'asynch'},
-      {title:'Unit 19 Day 1 Asynch',course:'PHYSICS 240',due:'2026-04-02',type:'asynch'},
       {title:'Checkpoint 11',course:'CHEM 215',due:'2026-04-03',type:'checkpoint'},
       {title:'Essay Assignment #2',course:'PSYCH 111',due:'2026-04-06',type:'essay'},
       {title:'Bodiford - Zen Funerals',course:'ASIAN 325',due:'2026-04-07',type:'reading'},
+      {title:'soundofonehand',course:'ASIAN 325',due:'2026-04-07',type:'reading'},
       {title:'Checkpoint 12',course:'CHEM 215',due:'2026-04-10',type:'checkpoint'},
+      {title:'BuswellTracing',course:'ASIAN 325',due:'2026-04-14',type:'reading'},
+      {title:'Watts - Beat Zen',course:'ASIAN 325',due:'2026-04-14',type:'reading'},
       {title:'Exam 3',course:'CHEM 215',due:'2026-04-14',type:'exam'},
       {title:'Checkpoint 13',course:'CHEM 215',due:'2026-04-17',type:'checkpoint'},
       {title:'Final Exam',course:'CHEM 215',due:'2026-04-23',type:'exam'},
     ];
-    document.getElementById('last-updated').textContent = 'Using cached data (could not sync)';
+    document.getElementById('last-updated').textContent = 'Could not sync · showing cached data';
   }
   renderAll();
 }
 
+// --- Exam countdowns ---
+function getExams() {
+  const fromCanvas = assignments.filter(a => a.type === 'exam');
+  const all = [...fromCanvas, ...manualExams.filter(e => daysUntil(e.due) >= 0)];
+  const seen = new Set();
+  return all.filter(e => { const k=e.title+e.due; return seen.has(k)?false:(seen.add(k),true); })
+            .sort((a,b) => new Date(a.due)-new Date(b.due));
+}
+
+function renderExams() {
+  const list = getExams();
+  document.getElementById('exam-grid').innerHTML =
+    list.map(e => {
+      const d = daysUntil(e.due);
+      const c = COURSES[e.course] || COURSES['OTHER'];
+      const isManual = manualExams.some(m => m.title===e.title && m.due===e.due);
+      const mi = manualExams.findIndex(m => m.title===e.title && m.due===e.due);
+      const urgent = d <= 7;
+      return `<div class="exam-card${urgent?' urgent':''}">
+        ${isManual ? `<button class="exam-delete" onclick="deleteExam(${mi})">×</button>` : ''}
+        <div><span class="exam-course-pill" style="background:${c.color};color:${c.text}">${e.course}</span></div>
+        <div class="exam-name">${e.title}</div>
+        <div class="exam-days${urgent?' urgent':''}">${d}</div>
+        <div class="exam-days-label">day${d===1?'':'s'} · ${new Date(e.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+      </div>`;
+    }).join('') +
+    `<button class="add-exam-btn" onclick="openModal()">+ add exam</button>`;
+}
+
+function openModal() { document.getElementById('modal-overlay').classList.add('open'); document.getElementById('f-name').focus(); }
+function closeModal(e) {
+  if(!e || e.target===document.getElementById('modal-overlay')) {
+    document.getElementById('modal-overlay').classList.remove('open');
+    document.getElementById('f-name').value='';
+    document.getElementById('f-date').value='';
+  }
+}
+function saveExam() {
+  const name = document.getElementById('f-name').value.trim();
+  const course = document.getElementById('f-course').value;
+  const date = document.getElementById('f-date').value;
+  if(!name||!date) { document.getElementById('f-name').focus(); return; }
+  manualExams.push({title:name, course, due:date, type:'exam'});
+  localStorage.setItem('texams', JSON.stringify(manualExams));
+  closeModal();
+  renderExams();
+}
+function deleteExam(i) {
+  manualExams.splice(i,1);
+  localStorage.setItem('texams', JSON.stringify(manualExams));
+  renderExams();
+}
+
+// --- Courses ---
 function renderCourses() {
-  document.getElementById('courses-card').innerHTML = Object.entries(courseFullNames).map(([k,v]) => {
+  document.getElementById('courses-card').innerHTML = Object.entries(COURSE_NAMES).map(([k,v]) => {
     const c = COURSES[k];
-    const count = assignments.filter(a => a.course === k).length;
+    const n = assignments.filter(a=>a.course===k).length;
     return `<div class="course-row">
       <span class="course-name">${v}</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span style="font-size:12px;color:var(--text-tertiary)">${count} upcoming</span>
+        <span style="font-size:12px;color:var(--text-tertiary)">${n} upcoming</span>
         <span class="course-tag" style="background:${c.color};color:${c.text}">${k}</span>
       </div>
     </div>`;
   }).join('');
 }
 
+// --- Assignments ---
 function renderFilters() {
-  const filters = ['all','this week','exam','writing','checkpoint','reading','asynch'];
-  document.getElementById('filter-row').innerHTML = filters.map(f =>
+  const fs = ['all','this week','exam','writing','checkpoint','reading'];
+  document.getElementById('filter-row').innerHTML = fs.map(f =>
     `<button class="filter-btn${activeFilter===f?' active':''}" onclick="setFilter('${f}')">${f}</button>`
   ).join('');
 }
-
-function setFilter(f) { activeFilter = f; renderFilters(); renderAssigns(); }
+function setFilter(f) { activeFilter=f; renderFilters(); renderAssigns(); }
 
 function renderAssigns() {
-  const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
-  let items = assignments.filter(a => {
-    if(activeFilter === 'this week') return new Date(a.due+'T00:00:00') <= weekEnd;
-    if(activeFilter === 'all') return true;
-    return a.type === activeFilter || (activeFilter === 'writing' && a.type === 'essay');
+  const wEnd = new Date(today); wEnd.setDate(today.getDate()+7);
+  const items = assignments.filter(a => {
+    if(activeFilter==='this week') return new Date(a.due+'T00:00:00')<=wEnd;
+    if(activeFilter==='all') return true;
+    return a.type===activeFilter || (activeFilter==='writing'&&a.type==='essay');
   });
-
   const el = document.getElementById('assign-card');
   if(!items.length){ el.innerHTML='<p class="empty">No assignments match this filter.</p>'; updateMetrics(); return; }
-
-  el.innerHTML = items.map((a) => {
-    const key = a.course + '|' + a.due + '|' + a.title;
+  el.innerHTML = items.map(a => {
+    const key = a.course+'|'+a.due+'|'+a.title;
     const isDone = done.has(key);
     const {label, cls} = dueLabel(a.due);
-    const c = COURSES[a.course] || {color:'#f1f1ee',text:'#555'};
+    const c = COURSES[a.course]||{color:'#f1f0eb',text:'#555'};
     return `<div class="assign-row${isDone?' done':''}" onclick="toggleDone('${key}')">
       <div class="checkbox${isDone?' checked':''}">${isDone?'✓':''}</div>
       <div style="flex:1;min-width:0;">
@@ -393,22 +417,60 @@ function renderAssigns() {
 }
 
 function toggleDone(key) {
-  done.has(key) ? done.delete(key) : done.add(key);
-  localStorage.setItem('done', JSON.stringify([...done]));
+  done.has(key)?done.delete(key):done.add(key);
+  localStorage.setItem('tdone', JSON.stringify([...done]));
   renderAssigns();
 }
 
 function updateMetrics() {
-  const weekEnd = new Date(today); weekEnd.setDate(today.getDate()+7);
-  const thisWeek = assignments.filter(a => new Date(a.due+'T00:00:00') <= weekEnd).length;
-  const todayCount = assignments.filter(a => daysUntil(a.due) === 0).length;
-  document.getElementById('m-week').textContent = thisWeek;
-  document.getElementById('m-today').textContent = todayCount;
+  const wEnd = new Date(today); wEnd.setDate(today.getDate()+7);
+  document.getElementById('m-week').textContent = assignments.filter(a=>new Date(a.due+'T00:00:00')<=wEnd).length;
+  document.getElementById('m-today').textContent = assignments.filter(a=>daysUntil(a.due)===0).length;
   document.getElementById('m-done').textContent = done.size;
   document.getElementById('m-total').textContent = assignments.length;
+  const total = Object.values(studyHrs).reduce((s,v)=>s+(v||0),0);
+  document.getElementById('m-study').textContent = total;
+  document.getElementById('study-total').textContent = total;
 }
 
-function renderAll() { renderCourses(); renderFilters(); renderAssigns(); }
+// --- Study time ---
+function renderStudy() {
+  const wEnd = new Date(today); wEnd.setDate(today.getDate()+7);
+  const items = assignments.filter(a => daysUntil(a.due)>=0 && new Date(a.due+'T00:00:00')<=wEnd);
+  if(!items.length) {
+    document.getElementById('study-list').innerHTML='<p class="empty" style="padding:4px 0 12px;">No assignments due this week.</p>';
+    return;
+  }
+  document.getElementById('study-list').innerHTML = items.map(a => {
+    const key = a.course+'|'+a.due+'|'+a.title;
+    const h = studyHrs[key]||0;
+    const c = COURSES[a.course]||{color:'#f1f0eb',text:'#555'};
+    const {label} = dueLabel(a.due);
+    return `<div class="study-row">
+      <div class="study-info">
+        <div class="study-name">${a.title}</div>
+        <div class="study-sub">
+          <span class="course-pill" style="background:${c.color};color:${c.text}">${a.course}</span>
+          <span style="color:var(--text-tertiary)">${label}</span>
+        </div>
+      </div>
+      <div class="study-controls">
+        <button class="hour-btn" onclick="adjustHrs('${key}',-1)">−</button>
+        <span class="hour-val">${h}h</span>
+        <button class="hour-btn" onclick="adjustHrs('${key}',1)">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function adjustHrs(key, delta) {
+  studyHrs[key] = Math.max(0, (studyHrs[key]||0)+delta);
+  localStorage.setItem('tstudy', JSON.stringify(studyHrs));
+  renderStudy();
+  updateMetrics();
+}
+
+function renderAll() { renderExams(); renderCourses(); renderFilters(); renderAssigns(); renderStudy(); }
 
 document.getElementById('today-str').textContent = today.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
 fetchAssignments();
