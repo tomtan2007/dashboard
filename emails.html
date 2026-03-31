@@ -332,11 +332,12 @@ async function loadEmails() {
     allEmails = data.emails.map(parseEmail).sort((a,b) => b.ts - a.ts);
     displayed = Math.min(PAGE, allEmails.length);
     document.getElementById('refresh-btn').style.display = 'block';
-    document.getElementById('reset-btn').style.display   = 'block';
     renderFilters();
     renderEmails();
   } catch(e) {
     showError(e.message);
+  } finally {
+    document.getElementById('reset-btn').style.display = 'block';
   }
 }
 
