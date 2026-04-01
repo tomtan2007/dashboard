@@ -543,7 +543,11 @@ function getFiltered() {
 
 function renderFilters() {
   const unreadCounts = {};
-  primaryEmails.forEach(e => { if (e.isUnread) unreadCounts[e.cat] = (unreadCounts[e.cat] || 0) + 1; });
+  const hasCat = {};
+  primaryEmails.forEach(e => {
+    hasCat[e.cat] = true;
+    if (e.isUnread) unreadCounts[e.cat] = (unreadCounts[e.cat] || 0) + 1;
+  });
   const totalUnread = primaryEmails.filter(e => e.isUnread).length;
 
   const pills = [
@@ -552,11 +556,11 @@ function renderFilters() {
   ];
   for (const [key, meta] of Object.entries(CATEGORIES)) {
     if (key === 'lowpri') continue;
-    if (unreadCounts[key]) pills.push({ key, label: meta.label, count: unreadCounts[key] });
+    if (hasCat[key]) pills.push({ key, label: meta.label, count: unreadCounts[key] || 0 });
   }
 
   document.getElementById('cat-filters').innerHTML = pills.map(p =>
-    `<button class="filter-btn${activeCat===p.key?' active':''}" onclick="setCat('${p.key}')">${p.label} <span class="filter-count">${p.count}</span></button>`
+    `<button class="filter-btn${activeCat===p.key?' active':''}" onclick="setCat('${p.key}')">${p.label}${p.count ? ' <span class="filter-count">' + p.count + '</span>' : ''}</button>`
   ).join('');
 }
 
