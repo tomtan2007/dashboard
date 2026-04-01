@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Inbox — Tom's Dashboard</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #ffffff; --bg-secondary: #f5f5f3; --bg-tertiary: #eeede8;
+      --text: #1a1a18; --text-secondary: #6b6b68; --text-tertiary: #9b9b97;
+      --border: rgba(0,0,0,0.12); --border-mid: rgba(0,0,0,0.22);
+      --radius-md: 8px; --radius-lg: 12px;
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #1c1c1a; --bg-secondary: #252523; --bg-tertiary: #2e2e2b;
+        --text: #f0efea; --text-secondary: #9b9b97; --text-tertiary: #6b6b68;
+        --border: rgba(255,255,255,0.1); --border-mid: rgba(255,255,255,0.2);
+      }
+    }
+
+    body { font-family: var(--font); background: var(--bg-tertiary); color: var(--text); min-height: 100vh; padding: 2rem 1rem; }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 8px; }
+    .header-left { display: flex; align-items: baseline; gap: 14px; }
+    .back-link { font-size: 13px; color: var(--text-tertiary); text-decoration: none; }
+    .back-link:hover { color: var(--text-secondary); }
+    .greeting { font-size: 22px; font-weight: 500; }
+
+    .btn { font-size: 13px; font-family: var(--font); padding: 7px 16px; border-radius: var(--radius-md); cursor: pointer; border: 0.5px solid var(--border-mid); background: none; color: var(--text); }
+    .btn-primary { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .btn-sm { padding: 5px 12px; font-size: 12px; }
+    .text-btn { font-size: 11px; color: var(--text-tertiary); background: none; border: none; cursor: pointer; font-family: var(--font); }
+    .text-btn:hover { color: var(--text-secondary); }
+
+    /* Setup */
+    .setup-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 2rem; max-width: 600px; margin: 2rem auto; }
+    .setup-title { font-size: 17px; font-weight: 500; margin-bottom: 8px; }
+    .setup-sub { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; }
+    .setup-step { display: flex; gap: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.6; }
+    .step-num { width: 20px; height: 20px; min-width: 20px; border-radius: 50%; background: var(--bg-tertiary); display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 500; margin-top: 2px; }
+    .setup-link { color: var(--text-secondary); }
+    .setup-note { font-size: 11px; color: var(--text-tertiary); margin-top: 10px; line-height: 1.5; }
+    .setup-divider { border: none; border-top: 0.5px solid var(--border); margin: 1.5rem 0; }
+    .setup-input-row { display: flex; gap: 8px; }
+    .setup-input { flex: 1; font-size: 13px; font-family: var(--font); border: 0.5px solid var(--border-mid); border-radius: var(--radius-md); padding: 7px 10px; background: var(--bg); color: var(--text); }
+    .setup-input:focus { outline: none; border-color: var(--text-secondary); }
+    code { font-size: 11px; background: var(--bg-secondary); padding: 1px 5px; border-radius: 4px; font-family: 'SF Mono','Fira Code',monospace; }
+    .code-block { background: var(--bg-secondary); border: 0.5px solid var(--border); border-radius: var(--radius-md); padding: 12px 14px; font-size: 11.5px; font-family: 'SF Mono','Fira Code',monospace; white-space: pre; overflow-x: auto; margin: 8px 0 4px; line-height: 1.6; color: var(--text); }
+    .copy-row { display: flex; justify-content: flex-end; }
+    .copy-btn { font-size: 11px; font-family: var(--font); color: var(--text-tertiary); background: none; border: none; cursor: pointer; padding: 2px 0; }
+    .copy-btn:hover { color: var(--text-secondary); }
+
+    /* Filters & stats */
+    .filter-section { margin-bottom: 16px; }
+    .filter-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 8px; }
+    .filter-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 0.5px solid var(--border-mid); background: none; color: var(--text-secondary); cursor: pointer; font-family: var(--font); display: flex; align-items: center; gap: 4px; }
+    .filter-btn.active { background: var(--text); color: var(--bg); border-color: var(--text); }
+    .filter-count { font-size: 10px; opacity: 0.6; }
+
+    .stats-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+    .stat { font-size: 12px; color: var(--text-secondary); }
+    .stat strong { color: var(--text); font-weight: 500; }
+
+    /* Cards */
+    .email-feed { display: flex; flex-direction: column; gap: 6px; }
+    .email-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 0.875rem 1.125rem; text-decoration: none; display: block; color: inherit; }
+    .email-card:hover { border-color: var(--border-mid); }
+    .email-card.unread { border-left: 3px solid var(--text); }
+    .email-card.low-pri { opacity: 0.55; }
+    .email-card.low-pri:hover { opacity: 0.8; }
+    .email-top { display: flex; align-items: center; gap: 6px; margin-bottom: 5px; flex-wrap: wrap; }
+    .email-meta { margin-left: auto; display: flex; align-items: center; gap: 6px; }
+    .email-date { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
+    .unread-dot { width: 6px; height: 6px; border-radius: 50%; background: #3b82f6; flex-shrink: 0; }
+    .cat-pill { font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 20px; white-space: nowrap; }
+    .sender { font-size: 11px; color: var(--text-secondary); font-weight: 500; }
+    .email-title { font-size: 13px; font-weight: 500; line-height: 1.35; margin-bottom: 3px; }
+    .email-preview { font-size: 12px; color: var(--text-secondary); line-height: 1.45; }
+
+    /* Event badge */
+    .event-row { display: flex; align-items: center; gap: 8px; margin-top: 6px; }
+    .event-badge { font-size: 11px; color: var(--text-secondary); background: var(--bg-secondary); padding: 3px 8px; border-radius: var(--radius-md); display: inline-flex; align-items: center; gap: 4px; }
+    .cal-link { font-size: 11px; color: #1e40af; text-decoration: none; font-weight: 500; }
+    .cal-link:hover { text-decoration: underline; }
+
+    .date-divider { font-size: 11px; font-weight: 500; color: var(--text-tertiary); letter-spacing: 0.06em; text-transform: uppercase; padding: 14px 0 6px; }
+    .state-msg { text-align: center; padding: 3rem 1rem; color: var(--text-secondary); font-size: 13px; line-height: 1.8; }
+    .loading-dots { display: inline-flex; gap: 4px; }
+    .loading-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--text-tertiary); animation: bounce 1.2s infinite ease-in-out; }
+    .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes bounce { 0%,80%,100%{transform:scale(0.6);opacity:.4} 40%{transform:scale(1);opacity:1} }
+    .load-more-wrap { text-align: center; padding: 16px 0 4px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <div class="header-left">
+      <a href="index.html" class="back-link">← Dashboard</a>
+      <span class="greeting">Inbox</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <button id="refresh-btn" class="btn btn-sm" style="display:none" onclick="loadEmails()">↻ Refresh</button>
+      <button id="reset-btn" class="text-btn" style="display:none" onclick="resetSetup()">Change URL</button>
+    </div>
+  </div>
+
+  <!-- Setup -->
+  <div id="setup-screen" style="display:none">
+    <div class="setup-card">
+      <div class="setup-title">One-time setup</div>
+      <div class="setup-sub">Same pattern as the Canvas emails page — an Apps Script syncs your inbox into a Google Sheet, which is published as a public CSV this page reads.</div>
+
+      <div class="setup-step">
+        <div class="step-num">1</div>
+        <div>Create a new Google Sheet. Copy the <strong>spreadsheet ID</strong> from the URL (between <code>/d/</code> and <code>/edit</code>).</div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">2</div>
+        <div>Open <a class="setup-link" href="https://script.google.com" target="_blank">script.google.com</a> → New project → paste this code. Replace <code>YOUR_SHEET_ID</code>.
+          <div class="code-block" id="script-code">function syncInbox() {
+  var threads = GmailApp.search('in:inbox newer_than:14d', 0, 200);
+  var emails = [];
+  for (var i = 0; i &lt; threads.length; i++) {
+    var msgs = threads[i].getMessages();
+    var m = msgs[msgs.length - 1];
+    var body = m.getPlainBody();
+    if (body) body = body.split('________')[0].trim();
+    else body = '';
+    emails.push([
+      m.getId(),
+      m.getSubject(),
+      m.getFrom(),
+      m.getDate().getTime(),
+      body.substring(0, 800),
+      m.isUnread()
+    ]);
+  }
+  emails.sort(function(a, b) { return b[3] - a[3]; });
+  var ss = SpreadsheetApp.openById('YOUR_SHEET_ID');
+  var sheet = ss.getSheetByName('inbox');
+  if (!sheet) sheet = ss.insertSheet('inbox');
+  sheet.clearContents();
+  sheet.getRange(1, 1, 1, 6).setValues(
+    [['id','subject','from','date','body','unread']]
+  );
+  if (emails.length > 0) {
+    sheet.getRange(2,1,emails.length,6).setValues(emails);
+  }
+}</div>
+          <div class="copy-row"><button class="copy-btn" id="copy-btn" onclick="copyScript()">copy code</button></div>
+        </div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">3</div>
+        <div>Click ▶ <strong>Run</strong>, authorize when prompted. Then set up a <strong>time trigger</strong> (clock icon → Add Trigger → <code>syncInbox</code> → every 15 min).</div>
+      </div>
+
+      <div class="setup-step">
+        <div class="step-num">4</div>
+        <div>In the Sheet: <strong>File → Share → Publish to web</strong> → select the <strong>inbox</strong> sheet → <strong>CSV</strong> → Publish. Copy the URL.</div>
+      </div>
+
+      <hr class="setup-divider" />
+
+      <div class="setup-input-row">
+        <input class="setup-input" id="url-input" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/…/pub?output=csv" />
+        <button class="btn btn-primary" onclick="saveUrl()">Save</button>
+      </div>
+      <div class="setup-note">If you already set up the Canvas emails sheet, you can reuse the same spreadsheet — the script creates its own "inbox" tab.</div>
+    </div>
+  </div>
+
+  <!-- Main -->
+  <div id="main-content" style="display:none">
+    <div class="filter-section">
+      <div class="filter-row" id="cat-filters"></div>
+    </div>
+    <div id="stats-row" class="stats-row"></div>
+    <div id="email-feed" class="email-feed"></div>
+    <div class="load-more-wrap" id="load-more-wrap" style="display:none">
+      <button class="btn" onclick="showMore()">Show more</button>
+    </div>
+  </div>
+
+</div>
+<script>
+let CSV_URL   = localStorage.getItem('inbox_csv_url') || '';
+let allEmails = [];
+let displayed = 0;
+const PAGE    = 40;
+let activeCat = 'all';
+
+// ── Categories ────────────────────────────────────────────────────────────────
+const CATEGORIES = {
+  courses:   { label: 'Courses',        color: '#d1fae5', text: '#065f46' },
+  lab:       { label: 'Lab & Research',  color: '#dbeafe', text: '#1e40af' },
+  dept:      { label: 'BME & Career',    color: '#ede9fe', text: '#5b21b6' },
+  orgs:      { label: 'Student Orgs',    color: '#fef3c7', text: '#92400e' },
+  campus:    { label: 'Campus',          color: '#e0f2fe', text: '#0c4a6e' },
+  lowpri:    { label: 'Low Priority',    color: '#f1f0eb', text: '#9b9b97' },
+};
+
+// Sender-based classification rules (checked in order, first match wins)
+const RULES = [
+  // Low priority first (catch before campus)
+  { cat: 'lowpri', from: /simplyvoting\.com/i },
+  { cat: 'lowpri', from: /lyftmail\.com/i },
+  { cat: 'lowpri', from: /campusstorage/i },
+  { cat: 'lowpri', from: /do-not-reply@contact\.study\.cam/i },
+  { cat: 'lowpri', from: /nationalald\.org/i },
+  { cat: 'lowpri', from: /amuessurvey@/i },
+  { cat: 'lowpri', from: /donotreply@umich\.edu/i },
+  { cat: 'lowpri', subj: /take .*(survey|poll)/i },
+  { cat: 'lowpri', subj: /vote now|minutes to vote/i },
+
+  // Courses
+  { cat: 'courses', from: /instructure\.com/i },
+  { cat: 'courses', from: /perusall\.com/i },
+  { cat: 'courses', from: /gradescope\.com/i },
+  { cat: 'courses', from: /umichpsych.*sona/i },
+
+  // Lab & Research
+  { cat: 'lab', from: /hankins@med\.umich/i },
+  { cat: 'lab', from: /xhcao@med\.umich/i },
+  { cat: 'lab', from: /shuqinli@med\.umich/i },
+  { cat: 'lab', from: /uwtkkrxa@med\.umich/i },
+  { cat: 'lab', from: /mcieslik@med\.umich/i },
+  { cat: 'lab', from: /schanenp@med\.umich/i },
+  { cat: 'lab', from: /chemstands@umich/i },
+  { cat: 'lab', from: /corryns@umich/i },
+  { cat: 'lab', subj: /reading group|lab meeting|NMR|IR data/i },
+
+  // BME & Career
+  { cat: 'dept', from: /kagates@umich/i },
+  { cat: 'dept', from: /bmecommunications@/i },
+  { cat: 'dept', from: /bme-department-chair/i },
+  { cat: 'dept', from: /mssantil@umich/i },
+  { cat: 'dept', subj: /BME.*seminar|thesis.*defense|ph\.?d\.?\s*(defense|dissertation)/i },
+  { cat: 'dept', subj: /hiring|internship|career|resume workshop/i },
+
+  // Student Orgs
+  { cat: 'orgs', from: /bmes-info@/i },
+  { cat: 'orgs', from: /pcap-info@/i },
+  { cat: 'orgs', subj: /\bM-HEAL\b/i },
+  { cat: 'orgs', from: /ajbu@umich/i },
+  { cat: 'orgs', from: /esg\.newsletter@/i },
+
+  // Campus (catch-all for umich senders not matched above)
+  { cat: 'campus', from: /dpss-safety/i },
+  { cat: 'campus', from: /targetemail@umich/i },
+  { cat: 'campus', from: /ITS-inform@umich/i },
+  { cat: 'campus', from: /LSATechnologyServices@/i },
+  { cat: 'campus', from: /EastQuadLeadershipTeam@/i },
+  { cat: 'campus', from: /internationalce.*@umich/i },
+  { cat: 'campus', from: /coe-studentaffairs@/i },
+  { cat: 'campus', from: /Sociology.*@umich/i },
+  { cat: 'campus', from: /flooding-study@umich/i },
+  { cat: 'campus', from: /@umich\.edu/i },
+];
+
+function classify(from, subject) {
+  for (const r of RULES) {
+    if (r.from && r.from.test(from)) return r.cat;
+    if (r.subj && r.subj.test(subject)) return r.cat;
+  }
+  return 'campus';
+}
+
+// ── Sender name cleanup ──────────────────────────────────────────────────────
+function senderName(from) {
+  // "Karen Gates <kagates@umich.edu>" → "Karen Gates"
+  // "PSYCH 111 060 WN 2026 <notifications@instructure.com>" → "PSYCH 111"
+  let n = from.split('<')[0].trim().replace(/^"|"$/g, '');
+  // Strip semester/section for Canvas
+  n = n.replace(/\s+\d{3}\s+(WN|FA|SP|SU)\s+\d{4}/i, '');
+  n = n.replace(/\s+(WN|FA|SP|SU)\s+\d{4}/i, '');
+  return n.trim() || from.match(/<(.+?)>/)?.[1] || from;
+}
+
+// ── Event detection ──────────────────────────────────────────────────────────
+const MONTHS = 'jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec|january|february|march|april|may|june|july|august|september|october|november|december';
+const DATE_RE = new RegExp(
+  '(?:(?:' + MONTHS + ')\\w*\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?|\\d{1,2}\\/\\d{1,2}(?:\\/\\d{2,4})?)',
+  'gi'
+);
+const TIME_RE = /\d{1,2}(?::\d{2})?\s*(?:am|pm)(?:\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))?/gi;
+
+function detectEvent(subject, body) {
+  const text = subject + ' ' + body;
+  const dates = text.match(DATE_RE);
+  const times = text.match(TIME_RE);
+  if (!dates || dates.length === 0) return null;
+  // Pick the first date that looks like a future event
+  return { date: dates[0].trim(), time: times ? times[0].trim() : null };
+}
+
+function calendarLink(subject, event) {
+  const title = encodeURIComponent(subject);
+  const when  = encodeURIComponent((event.date || '') + (event.time ? ' ' + event.time : ''));
+  return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&details=${when}`;
+}
+
+// ── Title cleanup ────────────────────────────────────────────────────────────
+function cleanTitle(subject) {
+  let s = subject;
+  // Strip Canvas course suffixes
+  s = s.replace(/:\s*[A-Z][\w\s]+\s+(WN|FA|SP|SU)\s+\d{4}\s*$/i, '');
+  s = s.replace(/,\s*[A-Z][\w\s.]+\s+(WN|FA|SP|SU)\s+\d{4}\s*$/i, '');
+  // Strip common prefixes
+  s = s.replace(/^\[.*?\]\s*/, '');
+  s = s.replace(/^(Re|Fwd|FW):\s*/i, '');
+  return s.trim() || subject;
+}
+
+// ── CSV parsing ──────────────────────────────────────────────────────────────
+function parseCSV(text) {
+  const rows = []; let row = []; let field = ''; let inQ = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (inQ) {
+      if (c === '"' && text[i+1] === '"') { field += '"'; i++; }
+      else if (c === '"') inQ = false;
+      else field += c;
+    } else {
+      if (c === '"') inQ = true;
+      else if (c === ',') { row.push(field); field = ''; }
+      else if (c === '\n' || (c === '\r' && text[i+1] === '\n')) {
+        if (c === '\r') i++;
+        row.push(field); field = '';
+        if (row.length > 1 || row[0] !== '') rows.push(row);
+        row = [];
+      } else field += c;
+    }
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+// ── Parse email row ──────────────────────────────────────────────────────────
+function parseEmail(r) {
+  const from    = r[2] || '';
+  const subject = r[1] || '';
+  const body    = r[4] || '';
+  const cat     = classify(from, subject);
+  const event   = (cat !== 'lowpri') ? detectEvent(subject, body) : null;
+
+  const preview = body
+    .replace(/https?:\/\/\S+/g, '')
+    .replace(/\[([^\]]+)\]\s*\([^)]*\)/g, '$1')
+    .replace(/\r?\n{3,}/g, '\n\n')
+    .trim().substring(0, 200);
+
+  return {
+    id: r[0], subject, from, cat, event,
+    sender: senderName(from),
+    title: cleanTitle(subject),
+    preview,
+    isUnread: r[5] === 'TRUE' || r[5] === 'true',
+    ts: parseInt(r[3], 10),
+    gmailUrl: 'https://mail.google.com/mail/u/0/#all/' + r[0],
+  };
+}
+
+// ── Load ─────────────────────────────────────────────────────────────────────
+async function loadEmails() {
+  allEmails = [];
+  document.getElementById('main-content').style.display = 'block';
+  showLoading();
+  try {
+    const resp = await fetch(CSV_URL);
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const text = await resp.text();
+    const rows = parseCSV(text);
+    if (rows.length < 2) throw new Error('Sheet is empty — run the script first.');
+    allEmails = rows.slice(1)
+      .filter(r => r.length >= 6 && !isNaN(parseInt(r[3])))
+      .map(parseEmail)
+      .sort((a, b) => b.ts - a.ts);
+    displayed = Math.min(PAGE, allEmails.length);
+    document.getElementById('refresh-btn').style.display = 'block';
+    renderFilters();
+    renderEmails();
+  } catch (e) {
+    showError(e.message);
+  } finally {
+    document.getElementById('reset-btn').style.display = 'block';
+  }
+}
+
+// ── Render ───────────────────────────────────────────────────────────────────
+function getFiltered() {
+  if (activeCat === 'all') return allEmails;
+  if (activeCat === 'unread') return allEmails.filter(e => e.isUnread);
+  return allEmails.filter(e => e.cat === activeCat);
+}
+
+function renderFilters() {
+  const counts = {};
+  allEmails.forEach(e => { counts[e.cat] = (counts[e.cat] || 0) + 1; });
+  const unread = allEmails.filter(e => e.isUnread).length;
+
+  const pills = [
+    { key: 'all', label: 'All', count: allEmails.length },
+    { key: 'unread', label: 'Unread', count: unread },
+  ];
+  for (const [key, meta] of Object.entries(CATEGORIES)) {
+    if (counts[key]) pills.push({ key, label: meta.label, count: counts[key] });
+  }
+
+  document.getElementById('cat-filters').innerHTML = pills.map(p =>
+    `<button class="filter-btn${activeCat===p.key?' active':''}" onclick="setCat('${p.key}')">${p.label} <span class="filter-count">${p.count}</span></button>`
+  ).join('');
+}
+
+function setCat(c) { activeCat = c; renderFilters(); renderEmails(); }
+function showMore() { displayed = Math.min(displayed + PAGE, getFiltered().length); renderEmails(); }
+
+function renderEmails() {
+  const feed  = document.getElementById('email-feed');
+  const items = getFiltered().slice(0, displayed);
+
+  const unread = allEmails.filter(e => e.isUnread).length;
+  document.getElementById('stats-row').innerHTML =
+    `<span class="stat"><strong>${allEmails.length}</strong> emails (14 days)</span>` +
+    `<span class="stat"><strong>${unread}</strong> unread</span>`;
+
+  if (!items.length) {
+    feed.innerHTML = '<p class="state-msg">No emails match this filter.</p>';
+    document.getElementById('load-more-wrap').style.display = 'none';
+    return;
+  }
+
+  let html = '', lastLabel = '';
+  items.forEach(e => {
+    const label = dividerLabel(e.ts);
+    if (label !== lastLabel) { html += `<div class="date-divider">${label}</div>`; lastLabel = label; }
+    html += cardHTML(e);
+  });
+  feed.innerHTML = html;
+  document.getElementById('load-more-wrap').style.display = displayed < getFiltered().length ? 'block' : 'none';
+}
+
+function cardHTML(e) {
+  const cat  = CATEGORIES[e.cat];
+  const pill = `<span class="cat-pill" style="background:${cat.color};color:${cat.text}">${cat.label}</span>`;
+
+  let eventHTML = '';
+  if (e.event) {
+    const link = calendarLink(e.subject, e.event);
+    eventHTML = `<div class="event-row">
+      <span class="event-badge">&#128197; ${e.event.date}${e.event.time ? ' · ' + e.event.time : ''}</span>
+      <a class="cal-link" href="${link}" target="_blank" rel="noopener" onclick="event.stopPropagation()">+ Add to calendar</a>
+    </div>`;
+  }
+
+  const preview = (!e.isUnread || e.cat === 'lowpri') ? '' :
+    (e.preview ? `<div class="email-preview">${e.preview.substring(0, 120)}</div>` : '');
+
+  return `<a class="email-card${e.isUnread ? ' unread' : ''}${e.cat === 'lowpri' ? ' low-pri' : ''}" href="${e.gmailUrl}" target="_blank" rel="noopener">
+    <div class="email-top">
+      ${pill}
+      <span class="sender">${e.sender}</span>
+      <div class="email-meta">
+        <span class="email-date">${formatDate(e.ts)}</span>
+        ${e.isUnread ? '<span class="unread-dot"></span>' : ''}
+      </div>
+    </div>
+    <div class="email-title">${e.title}</div>
+    ${preview}${eventHTML}
+  </a>`;
+}
+
+// ── Date helpers ─────────────────────────────────────────────────────────────
+function dividerLabel(ts) {
+  const days = Math.floor((Date.now() - ts) / 86400000);
+  if (days === 0) return 'Today';
+  if (days === 1) return 'Yesterday';
+  if (days < 7)   return 'This week';
+  if (days < 14)  return 'Last week';
+  return new Date(ts).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+function formatDate(ts) {
+  const days = Math.floor((Date.now() - ts) / 86400000), d = new Date(ts);
+  if (days === 0) return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  if (days === 1) return 'Yesterday';
+  if (days < 7)   return d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+// ── UI helpers ───────────────────────────────────────────────────────────────
+function showLoading() { document.getElementById('email-feed').innerHTML = '<p class="state-msg"><span class="loading-dots"><span></span><span></span><span></span></span></p>'; }
+function showError(msg) { document.getElementById('email-feed').innerHTML = `<p class="state-msg">${msg}</p>`; }
+
+function saveUrl() {
+  const val = document.getElementById('url-input').value.trim();
+  if (!val || !val.includes('docs.google.com')) {
+    document.getElementById('url-input').style.borderColor = '#ef4444'; return;
+  }
+  CSV_URL = val;
+  localStorage.setItem('inbox_csv_url', val);
+  document.getElementById('setup-screen').style.display = 'none';
+  loadEmails();
+}
+function resetSetup() {
+  localStorage.removeItem('inbox_csv_url');
+  CSV_URL = ''; allEmails = [];
+  document.getElementById('main-content').style.display = 'none';
+  document.getElementById('refresh-btn').style.display = 'none';
+  document.getElementById('reset-btn').style.display = 'none';
+  document.getElementById('setup-screen').style.display = 'block';
+}
+function copyScript() {
+  const raw = document.getElementById('script-code').textContent
+    .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+  navigator.clipboard.writeText(raw).then(() => {
+    const b = document.getElementById('copy-btn');
+    b.textContent = 'copied!'; setTimeout(() => b.textContent = 'copy code', 2000);
+  });
+}
+
+// Boot
+if (CSV_URL) loadEmails();
+else document.getElementById('setup-screen').style.display = 'block';
+</script>
+</body>
+</html>
