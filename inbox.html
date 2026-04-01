@@ -137,7 +137,8 @@
 var GEMINI_KEY = 'YOUR_GEMINI_KEY';
 
 function syncInbox() {
-  var threads = GmailApp.search('in:inbox newer_than:14d', 0, 200);
+  var threads = GmailApp.search(
+    'in:inbox newer_than:14d', 0, 200);
   var emails = [];
   for (var i = 0; i &lt; threads.length; i++) {
     var msgs = threads[i].getMessages();
@@ -146,94 +147,113 @@ function syncInbox() {
     if (body) body = body.split('________')[0].trim();
     else body = '';
     emails.push([
-      m.getId(),
-      m.getSubject(),
-      m.getFrom(),
+      m.getId(), m.getSubject(), m.getFrom(),
       m.getDate().getTime(),
-      body.substring(0, 800),
-      m.isUnread()
+      body.substring(0, 800), m.isUnread()
     ]);
   }
   emails.sort(function(a, b) { return b[3] - a[3]; });
-
-  // Classify with Gemini in batches of 20
-  var categories = classifyEmails(emails);
-
+  var results = aiProcess(emails);
   var ss = SpreadsheetApp.openById(SHEET_ID);
   var sheet = ss.getSheetByName('inbox');
   if (!sheet) sheet = ss.insertSheet('inbox');
   sheet.clearContents();
-  sheet.getRange(1,1,1,7).setValues(
-    [['id','subject','from','date','body','unread','category']]
-  );
+  sheet.getRange(1,1,1,8).setValues(
+    [['id','subject','from','date','body',
+      'unread','category','summary']]);
   if (emails.length > 0) {
     var rows = emails.map(function(e, i) {
-      return e.concat([categories[i] || 'campus']);
+      var r = results[i] || {};
+      return e.concat([
+        r.cat || 'campus', r.sum || ''
+      ]);
     });
-    sheet.getRange(2,1,rows.length,7).setValues(rows);
+    sheet.getRange(2,1,rows.length,8)
+      .setValues(rows);
   }
 }
 
-function classifyEmails(emails) {
-  var cats = [];
-  var BATCH = 20;
+function gemini(prompt) {
+  var resp = UrlFetchApp.fetch(
+    'https://generativelanguage.googleapis.com'
+    + '/v1beta/models/gemini-2.0-flash'
+    + ':generateContent?key=' + GEMINI_KEY,
+    { method: 'post',
+      contentType: 'application/json',
+      payload: JSON.stringify({
+        contents: [{parts: [{text: prompt}]}]
+      }),
+      muteHttpExceptions: true });
+  var j = JSON.parse(resp.getContentText());
+  return j.candidates[0].content.parts[0].text;
+}
+
+function aiProcess(emails) {
+  var out = [];
+  var BATCH = 10;
   for (var i = 0; i &lt; emails.length; i += BATCH) {
     var batch = emails.slice(i, i + BATCH);
     var lines = batch.map(function(e, j) {
+      var b = (e[4] || '').substring(0, 200);
       return (j+1) + '. FROM: ' + e[2]
-        + ' | SUBJ: ' + e[1];
+        + ' | SUBJ: ' + e[1]
+        + ' | BODY: ' + b;
     }).join('\n');
-    var prompt = 'You are an email classifier for a UMich '
-      + 'BME undergrad. Classify each email into exactly '
-      + 'one category. Reply with ONLY the numbers and '
-      + 'categories, one per line like "1. lab"\n\n'
+    var prompt = 'You classify and summarize emails '
+      + 'for a UMich BME undergrad.\n\n'
+      + 'For each email reply with exactly one line:\n'
+      + 'NUMBER. CATEGORY | SUMMARY\n\n'
+      + 'Example: 1. lab | PI moved reading group '
+      + 'to Wed 4pm, asking for confirmation.\n\n'
       + 'Categories:\n'
-      + '- lab: from lab PI/members, research related\n'
-      + '- dept: BME department, career services, '
-      + 'seminars, thesis defenses, job/internship\n'
+      + '- lab: lab PI/members, research\n'
+      + '- dept: BME dept, career, seminars, '
+      + 'thesis defenses, jobs/internships\n'
       + '- orgs: student organizations, clubs\n'
-      + '- campus: important campus announcements, '
-      + 'safety alerts, registrar, financial aid, '
-      + 'housing, IT — things that may need action\n'
+      + '- campus: important campus announcements '
+      + 'that need action (registrar, financial '
+      + 'aid, safety, housing, IT)\n'
       + '- lowpri: mass emails, surveys, voting, '
-      + 'newsletters, promotions, events the student '
-      + 'likely wont attend, generic department blasts, '
-      + 'MCTP events, storage reminders, Lyft, study '
-      + 'recruitment\n\nWhen in doubt, mark as lowpri. '
+      + 'newsletters, promos, events student '
+      + 'likely wont attend, MCTP, department '
+      + 'blasts, storage, Lyft, recruitment\n\n'
+      + 'Summary rules:\n'
+      + '- 1 sentence, max 20 words\n'
+      + '- Focus on what matters: action needed, '
+      + 'key info, deadline\n'
+      + '- Skip greetings and filler\n'
+      + '- When in doubt classify as lowpri\n\n'
       + 'Emails:\n' + lines;
     try {
-      var resp = UrlFetchApp.fetch(
-        'https://generativelanguage.googleapis.com'
-        + '/v1beta/models/gemini-2.0-flash:generateContent'
-        + '?key=' + GEMINI_KEY,
-        { method: 'post',
-          contentType: 'application/json',
-          payload: JSON.stringify({
-            contents: [{parts: [{text: prompt}]}]
-          }),
-          muteHttpExceptions: true
-        });
-      var json = JSON.parse(resp.getContentText());
-      var text = json.candidates[0].content
-        .parts[0].text;
-      var map = {};
+      var text = gemini(prompt);
+      var valid = ['lab','dept','orgs',
+        'campus','lowpri'];
       text.split('\n').forEach(function(line) {
-        var m = line.match(/^(\d+)\.\s*(\w+)/);
-        if (m) map[parseInt(m[1])] = m[2].toLowerCase();
+        var m = line.match(
+          /^(\d+)\.\s*(\w+)\s*\|\s*(.+)/);
+        if (m) {
+          var idx = parseInt(m[1]) - 1;
+          var c = m[2].toLowerCase();
+          if (valid.indexOf(c) &lt; 0) c = 'campus';
+          if (!out[i + idx]) out[i + idx] = {};
+          out[i + idx] = {
+            cat: c,
+            sum: m[3].trim().substring(0, 150)
+          };
+        }
       });
       for (var j = 0; j &lt; batch.length; j++) {
-        var c = map[j+1] || 'campus';
-        var valid = ['lab','dept','orgs',
-          'campus','lowpri'];
-        cats.push(valid.indexOf(c) >= 0 ? c : 'campus');
+        if (!out[i + j]) out[i + j] = {
+          cat: 'campus', sum: '' };
       }
     } catch(err) {
       for (var j = 0; j &lt; batch.length; j++) {
-        cats.push('campus');
+        if (!out[i + j]) out[i + j] = {
+          cat: 'campus', sum: '' };
       }
     }
   }
-  return cats;
+  return out;
 }</div>
           <div class="copy-row"><button class="copy-btn" id="copy-btn" onclick="copyScript()">copy code</button></div>
         </div>
@@ -377,19 +397,31 @@ function senderName(from) {
 }
 
 // ── Event detection ──────────────────────────────────────────────────────────
-// Only detect events when subject has both a date AND a time (e.g. "April 18th 11:00AM")
-const MONTHS = 'January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|Jun|Jul|Aug|Sep|Oct|Nov|Dec';
+const MONTHS = 'January|February|March|April|May|June|July|August|September|October|November|December|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec';
 const DATE_RE = new RegExp(
   '(?:' + MONTHS + ')\\.?\\s+\\d{1,2}(?:st|nd|rd|th)?(?:[,\\s]+\\d{4})?',
   'gi'
 );
 const TIME_RE = /\d{1,2}(?::\d{2})?\s*(?:am|pm)(?:\s*[-–]\s*\d{1,2}(?::\d{2})?\s*(?:am|pm))?/gi;
 
-function detectEvent(subject) {
-  // Require BOTH a date and time in the subject line — no body scanning
-  const dates = subject.match(DATE_RE);
-  const times = subject.match(TIME_RE);
+function detectEvent(subject, body) {
+  // First try subject only (most reliable)
+  let dates = subject.match(DATE_RE);
+  let times = subject.match(TIME_RE);
+  if (dates && times) return { date: dates[0].trim(), time: times[0].trim() };
+
+  // Then try body — but only the first 400 chars (before signatures/footers)
+  // and require BOTH a date and time near each other
+  const bodyTop = (body || '').substring(0, 400);
+  dates = bodyTop.match(DATE_RE);
+  times = bodyTop.match(TIME_RE);
   if (!dates || !times) return null;
+
+  // Check that date and time are close together in the text (within 40 chars)
+  const dIdx = bodyTop.search(DATE_RE);
+  const tIdx = bodyTop.search(TIME_RE);
+  if (Math.abs(dIdx - tIdx) > 40) return null;
+
   return { date: dates[0].trim(), time: times[0].trim() };
 }
 
@@ -444,9 +476,11 @@ function parseEmail(r) {
   const aiCat   = (r[6] || '').trim().toLowerCase();
   const validCats = ['lab','dept','orgs','campus','lowpri','_skip'];
   const cat     = validCats.includes(aiCat) ? aiCat : classify(from, subject);
-  const event   = (cat !== 'lowpri') ? detectEvent(subject) : null;
+  const event   = (cat !== 'lowpri') ? detectEvent(subject, body) : null;
 
-  const preview = body
+  // Use AI summary from column 8 if available, otherwise fall back to body snippet
+  const aiSummary = (r[7] || '').trim();
+  const preview = aiSummary || body
     .replace(/https?:\/\/\S+/g, '')
     .replace(/\[([^\]]+)\]\s*\([^)]*\)/g, '$1')
     .replace(/\r?\n{3,}/g, '\n\n')
@@ -589,8 +623,7 @@ function cardHTML(e) {
     calTag = `<span class="cal-tag" onclick="event.stopPropagation();window.open('${link}','_blank')" title="Add to Google Calendar">${e.event.date} ${e.event.time} +cal</span>`;
   }
 
-  const preview = (!e.isUnread || e.cat === 'lowpri') ? '' :
-    (e.preview ? `<div class="email-preview">${e.preview.substring(0, 120)}</div>` : '');
+  const preview = e.preview ? `<div class="email-preview">${e.preview.substring(0, 150)}</div>` : '';
 
   return `<div class="email-card${e.isUnread ? ' unread' : ''}${e.cat === 'lowpri' ? ' low-pri' : ''}" onclick="window.open('${e.gmailUrl}','_blank')">
     <div class="email-top">
