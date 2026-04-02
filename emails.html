@@ -80,9 +80,9 @@
 
     /* ── Cards ── */
     .email-feed { display: flex; flex-direction: column; gap: 8px; }
-    .email-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; text-decoration: none; display: block; color: inherit; }
-    .email-card:hover { border-color: var(--border-mid); }
-    .email-card.unread { border-left: 3px solid var(--text); }
+    .email-card { background: var(--bg); border: 0.5px solid var(--border); border-radius: var(--radius-lg); padding: 1rem 1.25rem; text-decoration: none; display: block; color: inherit; opacity: 0.55; }
+    .email-card:hover { border-color: var(--border-mid); opacity: 0.8; }
+    .email-card.unread { border-left: 3px solid var(--text); opacity: 1; }
     .email-card-top { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
     .email-card-meta { margin-left: auto; display: flex; align-items: center; gap: 8px; }
     .email-date { font-size: 11px; color: var(--text-tertiary); white-space: nowrap; }
